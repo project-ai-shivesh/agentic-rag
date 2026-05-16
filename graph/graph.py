@@ -5,6 +5,7 @@ from langgraph.graph import END, StateGraph
 
 from graph.chains.answer_grader import answer_grader
 from graph.chains.hallucination_grader import hallucination_grader
+from graph.chains.router import question_router, RouteQuery
 from graph.consts import RETRIEVE, GRADE_DOCUMENTS, GENERATE, WEBSEARCH
 from graph.nodes import retrieve, grade_documents, generate, web_search
 from graph.state import GraphState
@@ -51,12 +52,31 @@ def decide_to_generate(state):
         return GENERATE
 
 
+def route_question(state: GraphState) -> str:
+    print("---ROUTE QUESTION---")
+    question = state["question"]
+    source: RouteQuery =  question_router.invoke({"question": question})
+    if source.datasource == WEBSEARCH:
+        print("---DECISION: WEB SEARCH---")
+        return WEBSEARCH
+    elif source.datasource == "vectorstore":
+        print("---DECISION: VECTOR STORE (QUESTION TO RAG---")
+        return RETRIEVE
+
 workflow = StateGraph(GraphState)
 
 workflow.add_node(RETRIEVE, retrieve)
 workflow.add_node(GRADE_DOCUMENTS, grade_documents)
 workflow.add_node(GENERATE,generate)
 workflow.add_node(WEBSEARCH, web_search)
+
+workflow.set_conditional_entry_point(
+    route_question,
+    {
+        RETRIEVE: RETRIEVE,
+        WEBSEARCH: WEBSEARCH,
+    },
+)
 
 workflow.set_entry_point(RETRIEVE)
 workflow.add_edge(RETRIEVE, GRADE_DOCUMENTS)
