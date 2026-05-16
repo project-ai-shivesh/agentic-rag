@@ -256,6 +256,15 @@ This system reduces hallucinations through:
 3. **Web Search Fallback**: Fills gaps with real-time web information
 4. **Structured Outputs**: Uses Pydantic models for reliable LLM responses
 
+### Updated Workflow with Hallucination Prevention
+![graph_hal.png](graph.png)
+
+## Adaptive RAG
+1. **WebSearch Conditional Node**: Only performs web search if no relevant documents are found at the first step
+2. **Conditional Entry Point**: `workflow.set_conditional_entry_point(path_map)`
+
+### Updated Workflow with Adaptive RAG
+![graph.png](graph.png)
 ## 🚦 Error Handling
 
 The system handles common issues:
